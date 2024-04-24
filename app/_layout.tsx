@@ -1,14 +1,35 @@
 import Colors from "@/constants/Colors";
+import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 import { useFonts } from "expo-font";
-import { Link, Stack, useRouter } from "expo-router";
+import { Link, Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { TouchableOpacity } from "react-native";
+import { TouchableOpacity, Text } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import * as SecureStore from "expo-secure-store";
+
+const CLERK_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+const tokenCache = {
+  async getToken(key: string) {
+    try {
+      return SecureStore.getItemAsync(key);
+    } catch (error) {
+      console.log("error while getting getting token", error);
+    }
+  },
+  async saveToken(key: string, value: string) {
+    try {
+      return SecureStore.setItemAsync(key, value);
+    } catch (error) {
+      console.log("error while getting saving token", error);
+    }
+  },
+};
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -24,6 +45,8 @@ const InitialLayout = () => {
     ...FontAwesome.font,
   });
   const router = useRouter();
+  const { isLoaded, isSignedIn } = useAuth();
+  const segments = useSegments();
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
@@ -36,8 +59,23 @@ const InitialLayout = () => {
     }
   }, [loaded]);
 
-  if (!loaded) {
-    return null;
+  useEffect(() => {
+    console.log("isSignedIn", isSignedIn);
+    if (!isLoaded) return;
+
+    //Check current page of the user
+    const inAuthGroup = segments[0] === "(authenticated)";
+
+    if (isSignedIn && !inAuthGroup) {
+      router.replace("/(authenticated)/(tabs)/home");
+    }
+    if (!isSignedIn) {
+      router.replace("/");
+    }
+  }, [isSignedIn]);
+
+  if (!loaded || !isLoaded) {
+    return <Text>Loading...</Text>;
   }
 
   return (
@@ -84,16 +122,35 @@ const InitialLayout = () => {
         name="help"
         options={{ presentation: "modal", title: "Help" }}
       />
+      <Stack.Screen
+        name="verify/[phone]"
+        options={{
+          title: "",
+          headerBackTitle: "",
+          headerShadowVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity onPress={router.back}>
+              <Ionicons name="arrow-back" size={34} color={Colors.dark} />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="(authenticated)/(tabs)"
+        options={{ headerShown: false }}
+      />
     </Stack>
   );
 };
 
 const RootLayoutNav = () => {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <StatusBar style="light" />
-      <InitialLayout />
-    </GestureHandlerRootView>
+    <ClerkProvider publishableKey={CLERK_KEY!} tokenCache={tokenCache}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <StatusBar style="light" />
+        <InitialLayout />
+      </GestureHandlerRootView>
+    </ClerkProvider>
   );
 };
 
