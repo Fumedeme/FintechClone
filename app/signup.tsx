@@ -14,7 +14,7 @@ import { Link, useRouter } from "expo-router";
 import { useSignUp } from "@clerk/clerk-expo";
 
 const SignUp = () => {
-  const [countryCode, setCountryCode] = useState("+44");
+  const [countryCode, setCountryCode] = useState("+49");
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const keyboardOffset = Platform.OS === "ios" ? 90 : 0;
   const { signUp } = useSignUp();

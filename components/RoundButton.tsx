@@ -6,7 +6,7 @@ import Colors from "@/constants/Colors";
 type RountButtonProps = {
   name: string;
   image: typeof Ionicons.defaultProps;
-  onPress: () => void;
+  onPress?: () => void;
 };
 
 const RoundButton = ({ name, image, onPress }: RountButtonProps) => {

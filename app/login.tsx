@@ -23,14 +23,14 @@ enum LogInType {
 }
 
 const SignUp = () => {
-  const [countryCode, setCountryCode] = useState("+49");
+  const [countryCode, setCountryCode] = useState("+44");
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const keyboardOffset = Platform.OS === "ios" ? 90 : 0;
   const router = useRouter();
   const { signIn } = useSignIn();
 
   const onLogin = async (type: LogInType) => {
-    if (type === LogInType.Email) {
+    if (type === LogInType.Phone) {
       try {
         const fullPhoneNumber = `${countryCode}${phoneNumber}`;
 
